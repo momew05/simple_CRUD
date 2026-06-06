@@ -1,0 +1,9 @@
+#кэш
+__pycache__/
+backup/
+data/
+logs/
+
+#среда
+.venv
+
