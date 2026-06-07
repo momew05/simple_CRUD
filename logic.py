@@ -7,6 +7,26 @@ from utils import log_ui, log_sys_err, log_sys_info
 def is_first_run():
     return not database.has_users()
 
+MAX_BACKUPS = 3
+
+def enforce_backup_limit():
+    try:
+        backup_dir = 'backup'
+        if not os.path.exists(backup_dir):
+            return
+
+        backups = [os.path.join(backup_dir, f) for f in os.listdir(backup_dir) if f.endswith('.db')]
+        
+        backups.sort()
+
+        while len(backups) > MAX_BACKUPS:
+            oldest_backup = backups.pop(0)
+            os.remove(oldest_backup)
+            log_sys_info(f'Удален устаревший бэкап (контроль лимита): {oldest_backup}')
+            
+    except Exception as e:
+        log_sys_err(f'Ошибка при очистке старых бэкапов: {str(e)}')
+
 def make_login_backup():
     try:
         if os.path.exists(database.DB_PATH):
@@ -14,6 +34,9 @@ def make_login_backup():
             ts = datetime.now().strftime('%Y%m%d_%H%M%S')
             shutil.copy2(database.DB_PATH, f'backup/deadlines_{ts}_login.db')
             log_sys_info('Автоматический бэкап при входе успешно создан')
+            
+            enforce_backup_limit() 
+            
             return True
     except Exception as e:
         log_sys_err(f'Ошибка создания бэкапа при входе: {str(e)}')
@@ -186,6 +209,9 @@ def create_backup():
         fname = f'deadlines_{ts}_manual.db'
         shutil.copy2(database.DB_PATH, f'backup/{fname}')
         log_ui('Создан ручной бэкап базы данных')
+
+        enforce_backup_limit()
+        
         return fname, None
     except Exception as e:
         log_sys_err(f'Ошибка создания ручного бэкапа: {e}')
