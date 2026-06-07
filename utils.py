@@ -37,29 +37,5 @@ def log_sys_info(message):
 def log_sys_err(message):
     sys_logger.error(message)
 
-def check_achievements_logic():
-    import database
-    try:
-        conn = database.get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('SELECT COUNT(*) FROM tasks')
-        total_tasks = cursor.fetchone()[0]
-        if total_tasks >= 1:
-            cursor.execute("UPDATE achievements SET unlocked = 1 WHERE code = 'first_task'")
-            
-        cursor.execute("SELECT COUNT(*) FROM tasks WHERE status = 'done'")
-        done_tasks = cursor.fetchone()[0]
-        if done_tasks >= 5:
-            cursor.execute("UPDATE achievements SET unlocked = 1 WHERE code = 'done_5'")
-            
-        cursor.execute("SELECT COUNT(*) FROM tasks WHERE status = 'overdue'")
-        overdue_tasks = cursor.fetchone()[0]
-        if overdue_tasks == 0 and total_tasks > 0:
-            cursor.execute("UPDATE achievements SET unlocked = 1 WHERE code = 'no_overdue'")
-            
-        conn.commit()
-        conn.close()
-    except Exception as e:
-        log_sys_err(f'Ошибка проверки достижений: {str(e)}')
+
 
